@@ -1,0 +1,68 @@
+import tkinter as tk
+from tkinter import filedialog, messagebox
+import pandas as pd
+
+class MainApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Conversor de XLS para CSV")
+        
+        self.create_widgets()
+        
+    def create_widgets(self):
+        self.input_file_label = tk.Label(self.root, text="Arquivo .xls:")
+        self.input_file_label.pack()
+        
+        self.input_file_entry = tk.Entry(self.root, width=50)
+        self.input_file_entry.pack()
+        
+        self.input_file_button = tk.Button(self.root, text="Importar", command=self.import_file)
+        self.input_file_button.pack()
+        
+        self.output_file_label = tk.Label(self.root, text="Salvar como .csv:")
+        self.output_file_label.pack()
+        
+        self.output_file_entry = tk.Entry(self.root, width=50)
+        self.output_file_entry.pack()
+        
+        self.output_file_button = tk.Button(self.root, text="Salvar em", command=self.export_file)
+        self.output_file_button.pack()
+        
+        self.convert_button = tk.Button(self.root, text="Converter", command=self.convert_file)
+        self.convert_button.pack()
+        
+        self.cancel_button = tk.Button(self.root, text="Cancelar", command=self.cancel)
+        self.cancel_button.pack()
+    
+    def import_file(self):
+        file_path = filedialog.askopenfilename(filetypes=[("Excel files", "*.xls *.xlsx")])
+        self.input_file_entry.delete(0, tk.END)
+        self.input_file_entry.insert(0, file_path)
+    
+    def export_file(self):
+        file_path = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV files", "*.csv")])
+        self.output_file_entry.delete(0, tk.END)
+        self.output_file_entry.insert(0, file_path)
+    
+    def convert_file(self):
+        input_path = self.input_file_entry.get()
+        output_path = self.output_file_entry.get()
+        if not input_path or not output_path:
+            messagebox.showerror("Erro", "Os campos de caminho do arquivo não podem estar vazios.")
+            return
+        try:
+            df = pd.read_excel(input_path, engine='openpyxl')
+            df.to_csv(output_path, index=False)
+            messagebox.showinfo("Sucesso", "Arquivo convertido com sucesso!")
+        except ImportError as e:
+            messagebox.showerror("Erro", "Dependência faltando: openpyxl. Use pip para instalar openpyxl.")
+        except Exception as e:
+            messagebox.showerror("Erro", f"Erro ao converter arquivo: {e}")
+    
+    def cancel(self):
+        self.root.quit()
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = MainApp(root)
+    root.mainloop()
