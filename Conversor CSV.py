@@ -1,11 +1,11 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
-import openpyxl
+import pandas as pd
 
 class MainApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Remover Células Mescladas")
+        self.root.title("Conversor de XLS/XLSX para CSV - Solidcon")
         
         self.create_widgets()
         
@@ -40,7 +40,7 @@ class MainApp:
         self.input_file_entry.insert(0, file_path)
     
     def export_file(self):
-        file_path = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel files", "*.xlsx")])
+        file_path = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV files", "*.csv")])
         self.output_file_entry.delete(0, tk.END)
         self.output_file_entry.insert(0, file_path)
     
@@ -51,28 +51,15 @@ class MainApp:
             messagebox.showerror("Erro", "Os campos de caminho do arquivo não podem estar vazios.")
             return
         try:
-            wb = openpyxl.load_workbook(input_path)
-            ws = wb.active
-
-            # Cria um novo workbook para os dados processados
-            new_wb = openpyxl.Workbook()
-            new_ws = new_wb.active
-
-            # Desmesclar todas as células
-            for merge in list(ws.merged_cells.ranges):
-                ws.unmerge_cells(str(merge))
-            
-            # Copia os valores para o novo workbook
-            for row in ws.iter_rows(min_row=1, max_row=ws.max_row, min_col=1, max_col=ws.max_column):
-                new_row = []
-                for cell in row:
-                    new_row.append(cell.value)
-                new_ws.append(new_row)
-            
-            new_wb.save(output_path)
-            messagebox.showinfo("Sucesso", "Arquivo processado com sucesso!")
+            df = pd.read_excel(input_path, engine='openpyxl' if input_path.endswith('.xlsx') else None)
+            df = df.fillna('')  # Substituir NaN por strings vazias
+            df = df.astype(str)  # Converter todas as colunas para string
+            df.to_csv(output_path, index=False, quoting=1, quotechar='"', sep=',')
+            messagebox.showinfo("Sucesso", "Arquivo convertido com sucesso!")
+        except ImportError:
+            messagebox.showerror("Erro", "Dependência faltando: openpyxl. Use pip para instalar openpyxl.")
         except Exception as e:
-            messagebox.showerror("Erro", f"Erro ao processar arquivo: {e}")
+            messagebox.showerror("Erro", f"Erro ao converter arquivo: {e}")
     
     def cancel(self):
         self.root.quit()
